@@ -655,6 +655,7 @@ function initialize_ai(){
                 console.error(exception);
                 document.getElementById('ai_info').innerText = lang_ai_load_failed;
             }
+            document.getElementById("ai_message").style.display = "none";
         } catch(exception){
             console.error(exception);
             document.getElementById('ai_info').innerText = lang_ai_load_failed;
