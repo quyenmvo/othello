@@ -1,3 +1,654 @@
+/* Modern UI design for Othello Game */
+:root {
+  --primary-color: #2a6041;
+  --primary-light: #3a8055;
+  --primary-dark: #1a4030;
+  --secondary-color: #4a4a4a;
+  --accent-color: #f1c40f;
+  --background-color: #f5f5f5;
+  --card-color: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-light: #ffffff;
+  --board-green: #1e8253;
+  --board-border: #0e6033;
+  --shadow-light: 0 2px 5px rgba(0,0,0,0.1);
+  --shadow-medium: 0 4px 8px rgba(0,0,0,0.12);
+  --shadow-dark: 0 6px 12px rgba(0,0,0,0.15);
+  --radius-small: 4px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  --radius-circle: 50%;
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.5s;
+  --cell-size: min(60px, 8vw); /* Định nghĩa kích thước chuẩn cho ô */
+}
+
+/* Base styles */
+body {
+  font-family: 'Roboto', 'Arial', sans-serif;
+  line-height: 1.6;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: 500;
+  margin-top: 0;
+  color: var(--primary-dark);
+}
+
+h1 {
+  font-size: 2.2rem;
+  letter-spacing: -0.5px;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Card style containers */
+.card {
+  background-color: var(--card-color);
+  border-radius: var(--radius-medium);
+  padding: 20px;
+  box-shadow: var(--shadow-light);
+  margin-bottom: 20px;
+}
+
+/* Game board styling */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+  gap: 20px;
+}
+
+@media (min-width: 1024px) {
+  .game-container {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 20px;
+  }
+}
+
+.board-container {
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  order: 2;
+}
+
+/* Board styling with grid to ensure perfect squares */
+.table_board {
+  border: 0;
+  border-collapse: collapse;
+  background-color: var(--board-green);
+  box-shadow: var(--shadow-medium);
+  border-radius: var(--radius-small);
+  /* Ensure proper sizing */
+  table-layout: fixed;
+  width: min(80vw, 500px);
+}
+
+/* Force cell to be square using aspect ratio */
+.cell {
+  width: 12.5%;
+  position: relative;
+  text-align: center;
+  vertical-align: middle;
+  border: 2px solid var(--board-border);
+  padding: 0;
+  transition: background-color 0.3s;
+}
+
+/* Create square cells with aspect ratio */
+.cell::before {
+  content: '';
+  display: block;
+  padding-top: 100%; /* Creates a 1:1 aspect ratio */
+}
+
+.cell:hover {
+  background-color: rgba(255,255,255,0.1);
+  cursor: pointer;
+}
+
+.cell > * {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Coordinate cells styling */
+.coord_cell {
+  text-align: center;
+  vertical-align: middle;
+  width: 12.5%;
+  position: relative;
+  padding: 0;
+  background-color: transparent;
+}
+
+.coord_cell::before {
+  content: '';
+  display: block;
+  padding-top: 100%; /* Creates a 1:1 aspect ratio */
+}
+
+/* Điều chỉnh màu chữ cho coord để có thể đọc được trên nền trắng */
+.coord {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: min(16px, 3vw);
+  color: var(--primary-dark); /* Đổi màu từ trắng sang màu chính đậm */
+  font-weight: 600;
+}
+
+/* Stone styling - cho quân cờ trên bàn cờ */
+.cell .black_stone, 
+.cell .white_stone, 
+.cell .legal_stone_black, 
+.cell .legal_stone_white, 
+.cell .empty_stone {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Stone styling cho quân cờ trong status */
+.status_cell .black_stone,
+.status_cell .white_stone,
+.status_cell .legal_stone,
+.status_cell .state_blank {
+  width: min(50px, 9vw);
+  height: min(50px, 9vw);
+  border-radius: var(--radius-circle);
+  display: inline-block;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.black_stone {
+  background-color: #000;
+}
+
+.white_stone {
+  background-color: #fff;
+}
+
+.legal_stone {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.legal_stone_black {
+  background-color: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 3vw, 18px);
+  color: #000;
+  cursor: pointer;
+}
+
+.legal_stone_white {
+  background-color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 3vw, 18px);
+  color: #fff;
+  cursor: pointer;
+}
+
+.cell .empty_stone {
+  width: 0;
+  height: 0;
+  box-shadow: none;
+}
+
+/* Controls styling */
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  width: 100%;
+  order: 1;
+}
+
+@media (min-width: 768px) {
+  .controls {
+    min-width: 270px;
+    max-width: 320px;
+    order: 1;
+  }
+}
+
+.ai-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: var(--primary-light);
+  border-radius: var(--radius-medium);
+  color: white;
+}
+
+.status-indicator {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+/* Game status bar */
+.status {
+    margin: 1vmin auto;  /* Auto margins bên trái và phải để căn giữa */
+    padding: 0px;
+    width: min(min(1000px, 95vw), 49vmin);
+    border-collapse: collapse;
+    font-size: 0vw;
+    display: table;  /* Đảm bảo hiển thị là table */
+}
+
+.status tbody {
+    display: table-row-group;  /* Đảm bảo hiển thị đúng */
+    vertical-align: middle;
+    width: 100%;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-char {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Settings styling */
+.settings-container {
+  margin-bottom: 20px;
+}
+
+.settings-group {
+  margin-bottom: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-medium);
+  padding: 12px;
+  background-color: #fcfcfc;
+}
+
+.settings-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--primary-dark);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.settings-options {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px;
+  transition: all var(--transition-fast);
+}
+
+.option-label:hover {
+  background-color: rgba(0,0,0,0.05);
+  border-radius: var(--radius-small);
+}
+
+.option-text {
+  margin-left: 5px;
+  font-size: 0.9rem;
+}
+
+/* Slider styling */
+.slider-container {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.slider-title {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.slider {
+  width: 100%;
+  height: 8px;
+  -webkit-appearance: none;
+  background: #ddd;
+  outline: none;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+}
+
+.slider-value {
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: bold;
+  color: var(--primary-dark);
+}
+
+/* Button styling */
+.buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.btn {
+  border: none;
+  border-radius: var(--radius-medium);
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.btn-accent {
+  background-color: var(--accent-color);
+  color: var(--secondary-color);
+}
+
+.btn-accent:hover:not(:disabled) {
+  background-color: #e6bb0f;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Game info styling */
+.game-info {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: var(--radius-medium);
+  background-color: var(--card-color);
+  box-shadow: var(--shadow-light);
+}
+
+.info-title {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--primary-dark);
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.chart {
+  background-color: white;
+  border-radius: var(--radius-small);
+  padding: 10px;
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.transcript {
+  background-color: #f9f9f9;
+  border-radius: var(--radius-small);
+  padding: 15px;
+  max-height: 150px;
+  overflow-y: auto;
+  font-family: monospace;
+  line-height: 1.5;
+}
+
+/* Popup styling */
+.popup {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-normal);
+}
+
+.popup.is-show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.popup-inner {
+  background-color: white;
+  border-radius: var(--radius-large);
+  padding: 30px;
+  width: 80%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: var(--shadow-dark);
+}
+
+.popup-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: var(--primary-dark);
+}
+
+.popup-image {
+  width: 80%;
+  margin: 20px auto;
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-light);
+}
+
+.popup-text {
+  margin: 15px 0;
+  color: var(--text-secondary);
+}
+
+.black-background {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Footer */
+.footer {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: var(--primary-dark);
+  color: var(--text-light);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+/* Utilities */
+.hidden {
+  visibility: hidden;
+}
+
+.show {
+  visibility: visible;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Checkbox styling */
+.checkbox-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  margin-right: 5px;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Documentation and help section */
+.help-section {
+  margin-top: 30px;
+}
+
+.help-title {
+  color: var(--primary-dark);
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.help-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Table styling for info tables */
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.info-table th {
+  background-color: var(--primary-light);
+  color: white;
+  text-align: left;
+  padding: 10px;
+}
+
+.info-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.info-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .settings-options {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .buttons {
+    flex-direction: column;
+  }
+  
+  .popup-inner {
+    width: 90%;
+    padding: 15px;
+  }
+}
+
 label {
     line-height: 1.6;
     margin-left: 0.5%;
@@ -32,9 +683,6 @@ label {
 .div_main {
     line-height: 0.0em;
 }
-.table_board {
-    border: 0px solid #333;
-}
 .coords {
     border-collapse: collapse;
     background-color: white;
@@ -47,8 +695,9 @@ label {
     text-align: center;
     vertical-align: middle;
     padding: 0px;
-    width: min(min(1000px, 95vw) / 11, 7vmin);
-    height: min(min(1000px, 95vw) / 11, 7vmin);
+    width: var(--cell-size);
+    height: var(--cell-size);
+    aspect-ratio: 1/1;
     border: 0%;
     background-color: white;
 }
@@ -56,8 +705,8 @@ label {
     text-align: center;
     vertical-align: middle;
     padding: 0px;
-    width: min(min(1000px, 95vw) / 11, 7vmin);
-    height: min(min(1000px, 95vw) / 11, 7vmin);
+    width: var(--cell-size);
+    height: var(--cell-size);
     font-size: min(min(1000px, 95vw) / 22, 3.5vmin);
     font-weight: bolder;
 }
@@ -66,64 +715,11 @@ label {
     text-align: center;
     vertical-align: middle;
     padding: 0px;
-    width: min(min(1000px, 95vw) / 11, 7vmin);
-    height: min(min(1000px, 95vw) / 11, 7vmin);
+    width: var(--cell-size);
+    height: var(--cell-size);
+    aspect-ratio: 1/1;
     border: max(2px, min(min(1000px, 95vw) / 100, 0.5vmin)) solid rgb(0, 0, 0);
     background: rgb(36, 153, 114);
-}
-.black_stone {
-    text-align: center;
-    vertical-align: middle;
-    padding: 0px;
-    width: min(min(1000px, 95vw) / 13, 6vmin);
-    height: min(min(1000px, 95vw) / 13, 6vmin);
-    border-radius: min(min(1000px, 95vw) / 26, 3vmin);
-    background-color: rgb(0, 0, 0);
-    display: inline-block;
-}
-.white_stone {
-    text-align: center;
-    vertical-align: middle;
-    padding: 0px;
-    width: min(min(1000px, 95vw) / 13, 6vmin);
-    height: min(min(1000px, 95vw) / 13, 6vmin);
-    border-radius: min(min(1000px, 95vw) / 26, 3vmin);
-    background-color: rgb(255, 255, 255);
-    display: inline-block;
-}
-.legal_stone_black {
-    text-align: center;
-    vertical-align: middle;
-    margin: 0px;
-    width: min(min(1000px, 95vw) / 13, 6vmin);
-    height: min(min(1000px, 95vw) / 13, 6vmin);
-    border-radius: min(min(1000px, 95vw) / 26, 3vmin);
-    font-size: min(min(1000px, 95vw) / 26, 3vmin);
-    background-color: rgba(0, 0, 0, 0.15);
-    display: inline-block;
-    cursor: default;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-.legal_stone_white {
-    text-align: center;
-    vertical-align: middle;
-    margin: 0px;
-    width: min(min(1000px, 95vw) / 13, 6vmin);
-    height: min(min(1000px, 95vw) / 13, 6vmin);
-    border-radius: min(min(1000px, 95vw) / 26, 3vmin);
-    font-size: min(min(1000px, 95vw) / 26, 3vmin);
-    background-color: rgba(255, 255, 255, 0.15);
-    display: inline-block;
-    cursor: default;
-    margin: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
 }
 .empty_stone {
     text-align: center;
@@ -134,37 +730,54 @@ label {
     display: inline-block;
 }
 .status {
-    margin-top: 1vmin;
+    margin: 1vmin auto;  /* Auto margins bên trái và phải để căn giữa */
     padding: 0px;
     width: min(min(1000px, 95vw), 49vmin);
     border-collapse: collapse;
     font-size: 0vw;
+    display: table;  /* Đảm bảo hiển thị là table */
 }
+
+.status tbody {
+    display: table-row-group;  /* Đảm bảo hiển thị đúng */
+    vertical-align: middle;
+    width: 100%;
+}
+
 .status_cell {
     text-align: center;
     vertical-align: middle;
     padding: 0px;
-    width: min(min(1000px, 95vw) / 11, 7vmin);
-    height: min(min(1000px, 95vw) / 11, 7vmin);
+    width: var(--cell-size);
+    height: var(--cell-size);
     background-color: rgb(180, 180, 180);
+    display: table-cell;
 }
+
 .status_char {
     text-align: center;
     vertical-align: middle;
     padding: 0px;
-    width: min(min(1000px, 95vw) / 11, 7vmin);
-    height: min(min(1000px, 95vw) / 11, 7vmin);
+    width: var(--cell-size);
+    height: var(--cell-size);
     background-color: rgb(180, 180, 180);
     font-size: min(min(1000px, 95vw) / 18, 4vmin);
     font-weight: bolder;
+    color: var(--text-primary); /* Đảm bảo màu chữ có thể đọc được */
+    display: table-cell;
 }
-.status_blank {
-    margin: 0px;
-    width: min(min(1000px, 95vw) / 11, 7vmin);
-    height: min(min(1000px, 95vw) / 11, 7vmin);
-    text-align: center;
-    display: inline-block;
+
+.state_blank {
+    color: var(--text-primary); /* Đổi màu chữ từ trắng sang màu chữ chính */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: min(16px, 3.5vw);
+    font-weight: bold;
 }
+
 .record {
     overflow-wrap: break-word;
 }
@@ -264,4 +877,201 @@ label {
 .settings_table {
     background-color: white;
     border: none;
+}
+
+/* Move History (right side) styling */
+.move-history-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  order: 3;
+}
+
+@media (min-width: 768px) {
+  .move-history-sidebar {
+    min-width: 270px;
+    max-width: 320px;
+  }
+}
+
+/* Mobile layout adjustments */
+@media (max-width: 1023px) {
+  .game-container {
+    flex-direction: column;
+  }
+  
+  .controls {
+    order: 1;
+    margin-bottom: 20px;
+  }
+  
+  .board-container {
+    order: 2;
+    margin-bottom: 20px;
+  }
+  
+  .move-history-sidebar {
+    order: 3;
+  }
+}
+
+/* Move History Card styling */
+.move-history-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.move-history-container {
+  background-color: #f9f9f9;
+  border-radius: var(--radius-small);
+  padding: 15px;
+  margin: 0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Controls for move history */
+.move-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.history-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-circle);
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-light);
+}
+
+.history-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.history-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.history-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.history-icon {
+  font-style: normal;
+  font-size: 18px;
+}
+
+/* Move counter display */
+.move-viewer {
+  text-align: center;
+  margin: 10px 0;
+  font-weight: 500;
+  color: var(--primary-dark);
+}
+
+.move-counter {
+  font-size: 16px;
+  padding: 5px 10px;
+  background-color: #eaf2ea;
+  border-radius: var(--radius-small);
+  border: 1px solid #ddd;
+}
+
+/* Interactive transcript styling */
+.interactive-transcript {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  background-color: white;
+  border-radius: var(--radius-small);
+  min-height: 40px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  flex-grow: 1;
+}
+
+/* Move item styling */
+.move-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-small);
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.move-item:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-light);
+  z-index: 1;
+}
+
+.move-item.active {
+  background-color: var(--primary-light);
+  color: white;
+  border-color: var(--primary-dark);
+  box-shadow: var(--shadow-light);
+  transform: scale(1.1);
+  z-index: 2;
+}
+
+.move-item.black {
+  border-left: 4px solid black;
+}
+
+.move-item.white {
+  border-left: 4px solid white;
+  border-right: 4px solid #ccc;
+}
+
+/* Move number indicator */
+.move-number {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #999;
+  color: white;
+  font-size: 9px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-circle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Highlighted cell on the board */
+.highlighted-cell {
+  background-color: rgba(255, 235, 59, 0.5) !important;
+  box-shadow: inset 0 0 10px rgba(255, 152, 0, 0.7);
 }

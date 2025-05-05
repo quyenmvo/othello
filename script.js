@@ -66,6 +66,8 @@ let ctx = document.getElementById("graph");
 let loading_percent = 0;
 let percent_pointer = null;
 let initializing_var = null;
+let board_config = 0; // 0: standard, 1: alternative
+let first_player = 0; // 0: black first, 1: white first
 let graph = new Chart(ctx, {
     type: 'line',
     data: {
@@ -138,11 +140,41 @@ function start() {
     }
     graph.data.labels = [];
     graph.data.datasets[0].data = [];
-    grid[3][3] = 0
-    grid[3][4] = 1
-    grid[4][3] = 1
-    grid[4][4] = 0
-    player = 0;
+    
+    // Get board configuration selection
+    let boardConfig = document.getElementsByName('board_config');
+    for (var i = 0; i < boardConfig.length; ++i) {
+        if (boardConfig.item(i).checked) {
+            board_config = parseInt(boardConfig.item(i).value);
+            break;
+        }
+    }
+    
+    // Set up initial board based on selected configuration
+    if (board_config === 0) { // Standard configuration
+        grid[3][3] = 0;
+        grid[3][4] = 1;
+        grid[4][3] = 1;
+        grid[4][4] = 0;
+    } else { // Alternative configuration
+        grid[3][3] = 1;
+        grid[3][4] = 0;
+        grid[4][3] = 0;
+        grid[4][4] = 1;
+    }
+    
+    // Get first player selection
+    let firstPlayerOption = document.getElementsByName('first_player');
+    for (var i = 0; i < firstPlayerOption.length; ++i) {
+        if (firstPlayerOption.item(i).checked) {
+            first_player = parseInt(firstPlayerOption.item(i).value);
+            break;
+        }
+    }
+    
+    // Set the initial player
+    player = first_player;
+    
     graph.data.values = [];
     graph.data.labels = [];
     graph.update();
@@ -175,6 +207,18 @@ function start() {
     level_idx = level_range.value;
     console.log("level", level_idx);
     n_stones = 4;
+    
+    // Disable board configuration and first player selections during game
+    let boardConfigOptions = document.getElementsByName('board_config');
+    for (var i = 0; i < boardConfigOptions.length; ++i) {
+        boardConfigOptions.item(i).disabled = true;
+    }
+    
+    let firstPlayerOptions = document.getElementsByName('first_player');
+    for (var i = 0; i < firstPlayerOptions.length; ++i) {
+        firstPlayerOptions.item(i).disabled = true;
+    }
+    
     show(-1, -1);
     setInterval(ai_check, 250);
 }
@@ -429,6 +473,12 @@ function calc_value() {
 }
 
 function move(y, x) {
+    // Clear any cell highlighting from move history viewing
+    if (viewingHistory) {
+        clearCellHighlight();
+        viewingHistory = false;
+    }
+    
     for (var yy = 0; yy < hw; ++yy) {
         for (var xx = 0; xx < hw; ++xx) {
             bef_grid[yy][xx] = grid[yy][xx];
@@ -474,10 +524,219 @@ function move(y, x) {
     show(y, x);
 }
 
+// Variables for move history functionality
+let moveHistory = [];
+let currentViewIndex = -1;
+let originalGrid = [];
+let originalBefGrid = [];
+let originalPlayer = 0;
+let viewingHistory = false;
+let lastHighlightedCell = null;
+
+// Function to save the current board state
+function saveGridState() {
+    originalGrid = [];
+    originalBefGrid = [];
+    for (var y = 0; y < hw; ++y) {
+        originalGrid[y] = [];
+        originalBefGrid[y] = [];
+        for (var x = 0; x < hw; ++x) {
+            originalGrid[y][x] = grid[y][x];
+            originalBefGrid[y][x] = bef_grid[y][x];
+        }
+    }
+    originalPlayer = player;
+}
+
+// Function to restore the original board state
+function restoreGridState() {
+    for (var y = 0; y < hw; ++y) {
+        for (var x = 0; x < hw; ++x) {
+            grid[y][x] = originalGrid[y][x];
+            bef_grid[y][x] = originalBefGrid[y][x];
+        }
+    }
+    player = originalPlayer;
+}
+
+// Update move history display
+function updateMoveHistory() {
+    const recordElement = document.getElementById('record');
+    recordElement.innerHTML = '';
+    
+    // Update counter
+    document.getElementById('total-moves').innerText = moveHistory.length;
+    document.getElementById('current-move').innerText = 
+        currentViewIndex === -1 ? '0' : currentViewIndex + 1;
+    
+    // Create move items
+    moveHistory.forEach((move, index) => {
+        const moveItem = document.createElement('div');
+        moveItem.className = `move-item ${index % 2 === 0 ? 'black' : 'white'}`;
+        if (index === currentViewIndex) moveItem.classList.add('active');
+        
+        const position = String.fromCharCode(97 + move.x) + String.fromCharCode(49 + move.y);
+        moveItem.textContent = position;
+        
+        // Add move number badge
+        const moveNumber = document.createElement('span');
+        moveNumber.className = 'move-number';
+        moveNumber.textContent = index + 1;
+        moveItem.appendChild(moveNumber);
+        
+        moveItem.addEventListener('click', () => {
+            viewHistoryMove(index);
+        });
+        
+        recordElement.appendChild(moveItem);
+    });
+    
+    // Enable/disable navigation buttons
+    document.getElementById('move-first').disabled = currentViewIndex <= 0 || moveHistory.length === 0;
+    document.getElementById('move-prev').disabled = currentViewIndex <= 0 || moveHistory.length === 0;
+    document.getElementById('move-next').disabled = currentViewIndex >= moveHistory.length - 1 || moveHistory.length === 0;
+    document.getElementById('move-last').disabled = currentViewIndex >= moveHistory.length - 1 || moveHistory.length === 0;
+}
+
+// Function to view a specific move in history
+function viewHistoryMove(moveIndex) {
+    if (moveIndex < -1 || moveIndex >= moveHistory.length) return;
+    
+    // Clear previous highlight
+    clearCellHighlight();
+    
+    // If this is the first time viewing history, save current state
+    if (!viewingHistory) {
+        saveGridState();
+        viewingHistory = true;
+    }
+    
+    // Reset board to initial state
+    for (var y = 0; y < hw; ++y) {
+        for (var x = 0; x < hw; ++x) {
+            grid[y][x] = -1;
+            bef_grid[y][x] = -1;
+        }
+    }
+    
+    // Set up initial board based on configuration
+    if (board_config === 0) { // Standard configuration
+        grid[3][3] = 0;
+        grid[3][4] = 1;
+        grid[4][3] = 1;
+        grid[4][4] = 0;
+    } else { // Alternative configuration
+        grid[3][3] = 1;
+        grid[3][4] = 0;
+        grid[4][3] = 0;
+        grid[4][4] = 1;
+    }
+    
+    // Apply moves up to the selected index
+    let p = first_player;
+    let lastMove = null;
+    
+    for (let i = 0; i <= moveIndex; i++) {
+        const move = moveHistory[i];
+        lastMove = move;
+        
+        // Apply the move
+        grid[move.y][move.x] = p;
+        
+        // Flip stones
+        for (var dr = 0; dr < 8; ++dr) {
+            var ny = move.y + dy[dr];
+            var nx = move.x + dx[dr];
+            if (!inside(ny, nx)) continue;
+            if (empty(ny, nx)) continue;
+            if (grid[ny][nx] == p) continue;
+            
+            var flag = false;
+            var nny = ny, nnx = nx;
+            var plus = 0;
+            for (var d = 0; d < hw; ++d) {
+                if (!inside(nny, nnx)) break;
+                if (empty(nny, nnx)) break;
+                if (grid[nny][nnx] == p) {
+                    flag = true;
+                    break;
+                }
+                nny += dy[dr];
+                nnx += dx[dr];
+                ++plus;
+            }
+            if (flag) {
+                for (var d = 0; d < plus; ++d) {
+                    grid[ny + d * dy[dr]][nx + d * dx[dr]] = p;
+                }
+            }
+        }
+        
+        // Switch player
+        p = 1 - p;
+    }
+    
+    // Update the current view index
+    currentViewIndex = moveIndex;
+    
+    // Update display
+    updateMoveHistory();
+    
+    // Highlight the last move on the board
+    if (lastMove) {
+        highlightCell(lastMove.y, lastMove.x);
+    }
+    
+    // Show the board
+    show(-1, -1);
+}
+
+// Function to highlight a cell on the board
+function highlightCell(y, x) {
+    const cellId = "cell_" + (y * hw + x);
+    const cell = document.getElementById(cellId);
+    if (cell) {
+        cell.classList.add('highlighted-cell');
+        lastHighlightedCell = cellId;
+    }
+}
+
+// Function to clear the highlighted cell
+function clearCellHighlight() {
+    if (lastHighlightedCell) {
+        const cell = document.getElementById(lastHighlightedCell);
+        if (cell) {
+            cell.classList.remove('highlighted-cell');
+        }
+        lastHighlightedCell = null;
+    }
+}
+
+// Return to the current game state
+function returnToCurrentGame() {
+    if (viewingHistory) {
+        clearCellHighlight();
+        restoreGridState();
+        viewingHistory = false;
+    }
+    currentViewIndex = moveHistory.length - 1;
+    updateMoveHistory();
+    show(-1, -1);
+}
+
+// Updated update_record function to work with the new Move History
 function update_record() {
-    var record_html = document.getElementById('record');
-    var new_coord = String.fromCharCode(97 + record[record.length - 1][1]) + String.fromCharCode(49 + record[record.length - 1][0]);
-    record_html.innerHTML += new_coord;
+    const lastMove = record[record.length - 1];
+    const move = {
+        y: lastMove[0],
+        x: lastMove[1]
+    };
+    
+    moveHistory.push(move);
+    currentViewIndex = moveHistory.length - 1;
+    viewingHistory = false;
+    
+    updateMoveHistory();
 }
 
 function update_graph(s) {
@@ -571,11 +830,23 @@ window.addEventListener('DOMContentLoaded', function () {
     var container = document.getElementById('chart_container');
     ctx.clientWidth = container.clientWidth;
     ctx.clientHeight = container.clientHeight;
-    grid[3][3] = 0
-    grid[3][4] = 1
-    grid[4][3] = 1
-    grid[4][4] = 0
-    player = 0;
+    
+    // Set up default initial board configuration
+    if (board_config === 0) { // Standard configuration
+        grid[3][3] = 0;
+        grid[3][4] = 1;
+        grid[4][3] = 1;
+        grid[4][4] = 0;
+    } else { // Alternative configuration
+        grid[3][3] = 1;
+        grid[3][4] = 0;
+        grid[4][3] = 0;
+        grid[4][4] = 1;
+    }
+    
+    // Set initial player (defaults to black/0)
+    player = first_player;
+    
     var table = document.getElementById('table_board');
     for (var y = -1; y < hw; ++y) {
         var row = document.createElement('tr');
@@ -605,6 +876,43 @@ window.addEventListener('DOMContentLoaded', function () {
         }
         table.appendChild(row);
     }
+    
+    // Add event listeners for board configuration radio buttons
+    let boardConfigOptions = document.getElementsByName('board_config');
+    for (var i = 0; i < boardConfigOptions.length; ++i) {
+        boardConfigOptions.item(i).addEventListener('change', updateBoardConfiguration);
+    }
+    
+    // Add event listeners for first player radio buttons
+    let firstPlayerOptions = document.getElementsByName('first_player');
+    for (var i = 0; i < firstPlayerOptions.length; ++i) {
+        firstPlayerOptions.item(i).addEventListener('change', updateFirstPlayer);
+    }
+    
+    // Set up move history navigation buttons
+    document.getElementById('move-first').addEventListener('click', function() {
+        viewHistoryMove(-1); // Go to board setup state
+    });
+    
+    document.getElementById('move-prev').addEventListener('click', function() {
+        if (currentViewIndex > -1) {
+            viewHistoryMove(currentViewIndex - 1);
+        }
+    });
+    
+    document.getElementById('move-next').addEventListener('click', function() {
+        if (currentViewIndex < moveHistory.length - 1) {
+            viewHistoryMove(currentViewIndex + 1);
+        }
+    });
+    
+    document.getElementById('move-last').addEventListener('click', function() {
+        returnToCurrentGame();
+    });
+    
+    // Initialize move history display
+    updateMoveHistory();
+    
     show(-2, -2);
 });
 
@@ -676,10 +984,25 @@ function reset(){
     var auto_pass_elem = document.getElementById('auto_pass');
     auto_pass_elem.disabled = false;
     level_range.disabled = false;
+    
+    // Enable AI player selection
     let players = document.getElementsByName('ai_player');
     for (var i = 0; i < 2; ++i){
         players.item(i).disabled = false;
     }
+    
+    // Enable board configuration options
+    let boardConfigOptions = document.getElementsByName('board_config');
+    for (var i = 0; i < boardConfigOptions.length; ++i) {
+        boardConfigOptions.item(i).disabled = false;
+    }
+    
+    // Enable first player options
+    let firstPlayerOptions = document.getElementsByName('first_player');
+    for (var i = 0; i < firstPlayerOptions.length; ++i) {
+        firstPlayerOptions.item(i).disabled = false;
+    }
+    
     for (var y = 0; y < hw; ++y){
         for (var x = 0; x < hw; ++x) {
             grid[y][x] = -1;
@@ -688,14 +1011,66 @@ function reset(){
     }
     graph.data.labels = [];
     graph.data.datasets[0].data = [];
-    grid[3][3] = 0
-    grid[3][4] = 1
-    grid[4][3] = 1
-    grid[4][4] = 0
-    player = 0;
+    
+    // Set up default board based on current board configuration selection
+    if (board_config === 0) { // Standard configuration
+        grid[3][3] = 0;
+        grid[3][4] = 1;
+        grid[4][3] = 1;
+        grid[4][4] = 0;
+    } else { // Alternative configuration
+        grid[3][3] = 1;
+        grid[3][4] = 0;
+        grid[4][3] = 0;
+        grid[4][4] = 1;
+    }
+    
+    // Set initial player
+    player = first_player;
+    
     graph.data.values = [];
     graph.data.labels = [];
     graph.update();
     game_end= true;
+    show(-2, -2);
+}
+
+function updateBoardConfiguration() {
+    let boardConfig = document.getElementsByName('board_config');
+    for (var i = 0; i < boardConfig.length; ++i) {
+        if (boardConfig.item(i).checked) {
+            board_config = parseInt(boardConfig.item(i).value);
+            break;
+        }
+    }
+    
+    // Set up initial board based on selected configuration
+    if (board_config === 0) { // Standard configuration
+        grid[3][3] = 0;
+        grid[3][4] = 1;
+        grid[4][3] = 1;
+        grid[4][4] = 0;
+    } else { // Alternative configuration
+        grid[3][3] = 1;
+        grid[3][4] = 0;
+        grid[4][3] = 0;
+        grid[4][4] = 1;
+    }
+    
+    show(-2, -2);
+}
+
+function updateFirstPlayer() {
+    let firstPlayerOption = document.getElementsByName('first_player');
+    for (var i = 0; i < firstPlayerOption.length; ++i) {
+        if (firstPlayerOption.item(i).checked) {
+            first_player = parseInt(firstPlayerOption.item(i).value);
+            break;
+        }
+    }
+    
+    // Set the initial player
+    player = first_player;
+    
     show(-2, -2);
 }
