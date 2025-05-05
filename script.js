@@ -138,10 +138,10 @@ function start() {
     }
     graph.data.labels = [];
     graph.data.datasets[0].data = [];
-    grid[3][3] = 1
-    grid[3][4] = 0
-    grid[4][3] = 0
-    grid[4][4] = 1
+    grid[3][3] = 0
+    grid[3][4] = 1
+    grid[4][3] = 1
+    grid[4][4] = 0
     player = 0;
     graph.data.values = [];
     graph.data.labels = [];
@@ -687,10 +687,10 @@ function reset(){
     }
     graph.data.labels = [];
     graph.data.datasets[0].data = [];
-    grid[3][3] = 1
-    grid[3][4] = 0
-    grid[4][3] = 0
-    grid[4][4] = 1
+    grid[3][3] = 0
+    grid[3][4] = 1
+    grid[4][3] = 1
+    grid[4][4] = 0
     player = 0;
     graph.data.values = [];
     graph.data.labels = [];
