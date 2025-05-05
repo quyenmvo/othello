@@ -571,10 +571,10 @@ window.addEventListener('DOMContentLoaded', function () {
     var container = document.getElementById('chart_container');
     ctx.clientWidth = container.clientWidth;
     ctx.clientHeight = container.clientHeight;
-    grid[3][3] = 1
-    grid[3][4] = 0
-    grid[4][3] = 0
-    grid[4][4] = 1
+    grid[3][3] = 0
+    grid[3][4] = 1
+    grid[4][3] = 1
+    grid[4][4] = 0
     player = 0;
     var table = document.getElementById('table_board');
     for (var y = -1; y < hw; ++y) {
