@@ -1,10 +1,10 @@
 const lang_level = 'Level ';
-const lang_expected_score = 'AI will win/lose by ';
+const lang_expected_score = 'Higo predicts a win/loss by ';
 const lang_without_hint = ' without hints';
 const lang_with_hint = ' with hints';
-const lang_you_win = 'You Win!';
-const lang_ai_win = 'AI Win!';
-const lang_draw = 'Draw!';
+const lang_you_win = 'You Win! 🎉';
+const lang_ai_win = 'Higo Wins! 🤖🏆';
+const lang_draw = 'It’s a Draw! 🤝';
 const lang_tweet_str_0_win = 'I won against ';
 const lang_tweet_str_0_lose = 'I lost against ';
 const lang_tweet_str_0_draw = 'I tied against ';
@@ -16,9 +16,9 @@ const lang_tweet_str_5_win = '';
 const lang_tweet_str_5_lose = '';
 const lang_tweet_str_5_draw = '';
 const lang_tweet_result = 'Tweet this Result!';
-const lang_ai_loading = "AI Initializing...";
-const lang_ai_loaded = 'AI Initialized!';
-const lang_ai_load_failed = 'AI not loaded. Please reload this page.';
+const lang_ai_loading = "🤖 Higo is waking up...";
+const lang_ai_loaded = 'Higo is ready to play!';
+const lang_ai_load_failed = 'Oops! Higo didn’t wake up. Try reloading the page.';
 
 
 
