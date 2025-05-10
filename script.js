@@ -17,7 +17,7 @@ const lang_tweet_str_5_lose = '';
 const lang_tweet_str_5_draw = '';
 const lang_tweet_result = 'Tweet this Result!';
 const lang_ai_loading = "🤖 Higo is waking up... Please wait a moment!";
-const lang_ai_loaded = 'Higo is ready to play!';
+const lang_ai_loaded = '🤖 Higo stands ready to play! 🎮';
 const lang_ai_load_failed = 'Oops! Higo didn’t wake up. Try reloading the page.';
 
 
